@@ -4,31 +4,33 @@
 
 #include <json.hxx>
 
-namespace json {
+namespace json
+{
+    class Parser final
+    {
+    public:
+        explicit Parser(std::istream &stream);
 
-class Parser final {
-public:
-  Parser(std::istream &stream);
+        Node Parse();
 
-  Node Parse();
+    protected:
+        Node ParseNull();
+        Node ParseBoolean();
+        Node ParseNumber();
+        Node ParseString();
+        Node ParseArray();
+        Node ParseObject();
 
-protected:
-  Node ParseNull();
-  Node ParseBoolean();
-  Node ParseNumber();
-  Node ParseString();
-  Node ParseArray();
-  Node ParseObject();
+        void Get();
+        char Pop();
 
-  void Get();
+        [[nodiscard]] bool At(char c) const;
 
-  bool At(char c) const;
-  bool Skip(char c);
-  bool SkipWhitespace();
+        bool Skip(char c);
+        bool SkipWhitespace();
 
-private:
-  std::istream &m_Stream;
-  int m_Buffer;
-};
-
-} // namespace json
+    private:
+        std::istream &m_Stream;
+        int m_Buffer;
+    };
+}
