@@ -47,12 +47,14 @@ namespace json
             entry_t operator*() const
             {
                 return std::visit(
-                    [&]<typename I>(I &i) -> entry_t
+                    [&]<typename I>(I &&i) -> entry_t
                     {
-                        if constexpr (std::is_same_v<I, V>)
-                            return { std::to_string(idx), *i };
-                        else
+                        using X = std::remove_cvref_t<I>;
+
+                        if constexpr (std::is_same_v<X, M>)
                             return { i->first, i->second };
+                        else
+                            return { std::to_string(idx), *i };
                     },
                     it);
             }
