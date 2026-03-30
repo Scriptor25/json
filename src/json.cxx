@@ -5,35 +5,33 @@
 #include <json/parser.hxx>
 #include <json/utf8.hxx>
 
-enum json_format
+enum class json_format
 {
     compact,
     pretty,
 };
 
-struct json_context
+static auto &get_context_format(std::ostream &stream)
 {
-    json_format format;
-    unsigned depth;
-};
+    static const auto index = std::ios_base::xalloc();
 
-static json_context &get_json_context(std::ostream &stream)
+    auto &ref = stream.iword(index);
+
+    return *reinterpret_cast<json_format *>(&ref);
+}
+
+static auto &get_context_depth(std::ostream &stream)
 {
-    static auto index = std::ios_base::xalloc();
+    static const auto index = std::ios_base::xalloc();
 
-    auto context = static_cast<json_context *>(stream.pword(index));
-    if (!context)
-    {
-        context = new json_context({ .format = compact, .depth = 0 });
-        stream.pword(index) = context;
-    }
+    auto &ref = stream.iword(index);
 
-    return *context;
+    return *reinterpret_cast<unsigned long *>(&ref);
 }
 
 static std::ostream &depth_space(std::ostream &stream)
 {
-    const auto &[format, depth] = get_json_context(stream);
+    const auto &depth = get_context_depth(stream);
 
     for (unsigned i = 0; i < depth; ++i)
         stream << "  ";
@@ -201,7 +199,8 @@ std::ostream &json::Node::Print(std::ostream &stream) const
 
         void operator()(const std::vector<Node> &value) const
         {
-            auto &[format, depth] = get_json_context(stream);
+            const auto &format = get_context_format(stream);
+            auto &depth = get_context_depth(stream);
 
             switch (format)
             {
@@ -246,7 +245,8 @@ std::ostream &json::Node::Print(std::ostream &stream) const
 
         void operator()(const std::map<std::string, Node> &value) const
         {
-            auto &[format, depth] = get_json_context(stream);
+            const auto &format = get_context_format(stream);
+            auto &depth = get_context_depth(stream);
 
             switch (format)
             {
@@ -364,14 +364,14 @@ json::Node json::Node::operator[](const std::string &key) const
 
 std::ostream &json::compact(std::ostream &stream)
 {
-    auto &[format, depth] = get_json_context(stream);
+    auto &format = get_context_format(stream);
     format = json_format::compact;
     return stream;
 }
 
 std::ostream &json::pretty(std::ostream &stream)
 {
-    auto &[format, depth] = get_json_context(stream);
+    auto &format = get_context_format(stream);
     format = json_format::pretty;
     return stream;
 }
