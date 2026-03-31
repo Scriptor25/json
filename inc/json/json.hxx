@@ -11,6 +11,9 @@ namespace json
 {
     struct Node;
 
+    std::ostream &operator<<(std::ostream &stream, const Node &node);
+    std::istream &operator>>(std::istream &stream, Node &node);
+
     using Index = std::size_t;
     using Key = std::string;
 
@@ -122,9 +125,6 @@ namespace json
     template<typename T>
     concept variant = is_variant<std::remove_cvref_t<T>>::value;
 }
-
-std::ostream &operator<<(std::ostream &stream, const json::Node &node);
-std::istream &operator>>(std::istream &stream, json::Node &node);
 
 template<json::node N, typename T>
 bool from_json(N &&node, T &value) = delete;
@@ -328,6 +328,19 @@ namespace json
 
         NodeValue Value{};
     };
+
+    template<node N, typename T>
+    bool operator>>(N &&node, T &value)
+    {
+        return from_json(std::forward<N>(node), value);
+    }
+
+    template<typename T>
+    Node &operator<<(Node &node, T &&value)
+    {
+        to_json(node, std::forward<T>(value));
+        return node;
+    }
 }
 
 template<json::node N>
@@ -553,17 +566,4 @@ bool from_json_opt(N &&node, T &value, T default_value)
     }
 
     return false;
-}
-
-template<json::node N, typename T>
-bool operator>>(N &&node, T &value)
-{
-    return from_json(std::forward<N>(node), value);
-}
-
-template<typename T>
-json::Node &operator<<(json::Node &node, T &&value)
-{
-    to_json(node, std::forward<T>(value));
-    return node;
 }

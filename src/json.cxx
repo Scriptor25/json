@@ -314,13 +314,13 @@ json::Node json::Node::operator[](const std::string &key) const
         Value);
 }
 
-std::ostream &operator<<(std::ostream &stream, const json::Node &node)
+std::ostream &json::operator<<(std::ostream &stream, const Node &node)
 {
     return node.Print(stream);
 }
 
-std::istream &operator>>(std::istream &stream, json::Node &node)
+std::istream &json::operator>>(std::istream &stream, Node &node)
 {
-    node = json::Parser(stream).Parse();
+    node = Parser(stream).Parse();
     return stream;
 }
