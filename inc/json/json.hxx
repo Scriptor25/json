@@ -319,8 +319,15 @@ namespace json
         {
         }
 
+        template<primitive T>
+        auto &&operator=(T &&value)
+        {
+            Value = std::forward<T>(value);
+            return *this;
+        }
+
         template<assignable T>
-        explicit Node(T &&value)
+        Node(T &&value)
         {
             *this << value;
         }
