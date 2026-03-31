@@ -334,19 +334,19 @@ namespace json
 
         NodeValue Value{};
     };
+}
 
-    template<node N, typename T>
-    bool operator>>(N &&node, T &value)
-    {
-        return from_json(std::forward<N>(node), value);
-    }
+template<json::node N, typename T>
+bool operator>>(N &&node, T &value)
+{
+    return from_json(std::forward<N>(node), value);
+}
 
-    template<typename T>
-    Node &operator<<(Node &node, T &&value)
-    {
-        to_json(node, std::forward<T>(value));
-        return node;
-    }
+template<typename T>
+json::Node &operator<<(json::Node &node, T &&value)
+{
+    to_json(node, std::forward<T>(value));
+    return node;
 }
 
 template<json::node N>
