@@ -303,6 +303,22 @@ namespace json
         explicit Node(NodeValue &&value);
         Node &operator=(NodeValue &&value);
 
+        Node(const std::initializer_list<Array::value_type> entries)
+            : Value(Array(entries))
+        {
+        }
+
+        Node(const std::initializer_list<Object::value_type> entries)
+            : Value(Object(entries))
+        {
+        }
+
+        template<primitive T>
+        Node(T &&value)
+            : Value(std::forward<T>(value))
+        {
+        }
+
         template<assignable T>
         explicit Node(T &&value)
         {
