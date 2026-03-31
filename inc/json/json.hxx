@@ -36,7 +36,10 @@ namespace json
     >;
 
     template<typename T>
-    concept node = std::is_same_v<std::remove_cvref_t<T>, Node>;
+    concept node = std::same_as<std::remove_cvref_t<T>, Node>;
+
+    template<typename T>
+    concept node_value = std::same_as<std::remove_cvref_t<T>, NodeValue>;
 
     template<typename T>
     concept primitive = std::same_as<std::remove_cvref_t<T>, Undefined>
@@ -46,6 +49,9 @@ namespace json
                         || std::same_as<std::remove_cvref_t<T>, String>
                         || std::same_as<std::remove_cvref_t<T>, Array>
                         || std::same_as<std::remove_cvref_t<T>, Object>;
+
+    template<typename T>
+    concept assignable = !node<T> && !node_value<T> && !primitive<T>;
 
     template<typename T>
     concept integral = std::integral<std::remove_cvref_t<T>> && !primitive<T>;
@@ -292,19 +298,18 @@ namespace json
         Node &operator=(Node &&node) noexcept = default;
 
         explicit Node(const NodeValue &value);
-        explicit Node(NodeValue &&value);
-
         Node &operator=(const NodeValue &value);
+
+        explicit Node(NodeValue &&value);
         Node &operator=(NodeValue &&value);
 
-        template<typename T>
-        auto &&operator=(const T &value)
+        template<assignable T>
+        explicit Node(T &&value)
         {
             *this << value;
-            return *this;
         }
 
-        template<typename T>
+        template<assignable T>
         auto &&operator=(T &&value)
         {
             *this << value;
