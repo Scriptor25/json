@@ -187,7 +187,7 @@ bool from_json(N &&node, T &value)
 template<json::primitive T>
 void to_json(json::Node &node, T &&value)
 {
-    node = Node(std::forward<T>(value));
+    node = json::Node(std::forward<T>(value));
 }
 
 template<json::node N, json::floating_point T>
@@ -256,7 +256,7 @@ void to_json(json::Node &node, T &&value)
 {
     using ::to_json;
 
-    node = Array(value.size());
+    node = json::Array(value.size());
 
     for (std::size_t i = 0; i < value.size(); ++i)
         to_json(node[i], value[i]);
@@ -284,7 +284,7 @@ void to_json(json::Node &node, T &&value)
 {
     using ::to_json;
 
-    node = Array(value.size());
+    node = json::Array(value.size());
 
     for (std::size_t i = 0; i < value.size(); ++i)
         to_json(node[i], value[i]);
