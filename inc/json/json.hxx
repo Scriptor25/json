@@ -365,17 +365,16 @@ bool from_json_opt(const json::Node &node, T &value, T default_value)
 
 namespace json
 {
-    template<typename T>
     struct from_json_fn
     {
-        using value_type = T;
-        using serializer_type = serializer<std::decay_t<T>>;
-
+        template<typename T>
         bool operator()(const Node &node, T &value) const
         {
-            if constexpr (serializer_type::enable)
+            using S = serializer<std::decay_t<T>>;
+
+            if constexpr (S::enable)
             {
-                return serializer_type::from_json(node, std::forward<T>(value));
+                return S::from_json(node, std::forward<T>(value));
             }
             else
             {
@@ -385,17 +384,18 @@ namespace json
         }
     };
 
-    template<typename T>
+    inline constexpr from_json_fn from_json_dispatch;
+
     struct to_json_fn
     {
-        using value_type = T;
-        using serializer_type = serializer<std::decay_t<T>>;
-
+        template<typename T>
         void operator()(Node &node, T &&value) const
         {
-            if constexpr (serializer_type::enable)
+            using S = serializer<std::decay_t<T>>;
+
+            if constexpr (S::enable)
             {
-                serializer_type::to_json(node, std::forward<T>(value));
+                S::to_json(node, std::forward<T>(value));
             }
             else
             {
@@ -405,22 +405,24 @@ namespace json
         }
     };
 
+    inline constexpr to_json_fn to_json_dispatch;
+
     template<assignable T>
     Node::Node(T &&value)
     {
-        to_json_fn(*this, std::forward<T>(value));
+        to_json_dispatch(*this, std::forward<T>(value));
     }
 
     template<assignable T>
     Node &Node::operator=(T &&value)
     {
-        to_json_fn(*this, std::forward<T>(value));
+        to_json_dispatch(*this, std::forward<T>(value));
         return *this;
     }
 
     template<typename T>
     bool Node::operator>>(T &value) const
     {
-        return from_json_fn(*this, value);
+        return from_json_dispatch(*this, value);
     }
 }
