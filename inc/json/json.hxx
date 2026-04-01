@@ -374,12 +374,12 @@ namespace json
 
             if constexpr (S::enable)
             {
-                return S::from_json(node, std::forward<T>(value));
+                return S::from_json(node, value);
             }
             else
             {
                 using ::from_json;
-                return from_json(node, std::forward<T>(value));
+                return from_json(node, value);
             }
         }
     };
