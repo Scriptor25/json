@@ -77,7 +77,7 @@ json::Node json::Parser::ParseBoolean()
 
 json::Node json::Parser::ParseNumber()
 {
-    std::string buffer;
+    std::u32string buffer;
 
     if (At('-'))
         buffer += Pop();
@@ -109,8 +109,7 @@ json::Node json::Parser::ParseNumber()
 
     if (At('e') || At('E'))
     {
-        buffer += static_cast<char>(m_Buffer);
-        Get();
+        buffer += Pop();
 
         if (At('-') || At('+'))
             buffer += Pop();
@@ -123,12 +122,12 @@ json::Node json::Parser::ParseNumber()
         while ('0' <= m_Buffer && m_Buffer <= '9');
     }
 
-    return std::stold(buffer, nullptr);
+    return std::stold(utf8::encode(buffer), nullptr);
 }
 
 json::Node json::Parser::ParseString()
 {
-    String value;
+    std::u32string value;
 
     if (!Skip('"'))
         return {};
@@ -169,16 +168,10 @@ json::Node json::Parser::ParseString()
             break;
         case 'u':
         {
-            char buffer[5];
-            buffer[0] = Pop();
-            buffer[1] = Pop();
-            buffer[2] = Pop();
-            buffer[3] = Pop();
-            buffer[4] = 0;
+            const auto hi = PopByte();
+            const auto lo = PopByte();
 
-            char out[4];
-            const auto len = utf8::encode(std::stoi(buffer, nullptr, 0x10), out);
-            value.append(out, out + len);
+            value.push_back((hi & 0xff) << 8 | lo & 0xff);
             break;
         }
         default:
@@ -186,7 +179,7 @@ json::Node json::Parser::ParseString()
         }
     }
 
-    return std::move(value);
+    return utf8::encode(value);
 }
 
 json::Node json::Parser::ParseArray()
@@ -261,19 +254,39 @@ void json::Parser::Get()
     m_Buffer = m_Stream.get();
 }
 
-char json::Parser::Pop()
+char32_t json::Parser::Pop()
 {
     const auto buffer = m_Buffer;
     m_Buffer = m_Stream.get();
     return static_cast<char>(buffer);
 }
 
-bool json::Parser::At(const char c) const
+unsigned char json::Parser::PopHalfByte()
+{
+    const auto c = Pop();
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    if ('A' <= c && c <= 'F')
+        return c - 'A' + 10;
+    if ('a' <= c && c <= 'f')
+        return c - 'a' + 10;
+    return 0;
+}
+
+unsigned char json::Parser::PopByte()
+{
+    const auto hi = PopHalfByte();
+    const auto lo = PopHalfByte();
+
+    return (hi & 0xF) << 4 | lo & 0xF;
+}
+
+bool json::Parser::At(const char32_t c) const
 {
     return m_Buffer == c;
 }
 
-bool json::Parser::Skip(const char c)
+bool json::Parser::Skip(const char32_t c)
 {
     const auto skip = m_Buffer == c;
     if (skip)
@@ -289,7 +302,7 @@ bool json::Parser::Skip(const std::string_view s)
     return true;
 }
 
-static bool is_whitespace(const int c)
+static bool is_whitespace(const char32_t c)
 {
     return c == ' ' || c == '\n' || c == '\r' || c == '\t';
 }

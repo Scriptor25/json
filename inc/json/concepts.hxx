@@ -9,28 +9,28 @@
 namespace json
 {
     template<typename T>
-    concept node = std::same_as<std::remove_cvref_t<T>, Node>;
+    concept node = std::same_as<std::decay_t<T>, Node>;
 
     template<typename T>
-    concept node_value = std::same_as<std::remove_cvref_t<T>, NodeValue>;
+    concept node_value = std::same_as<std::decay_t<T>, NodeValue>;
 
     template<typename T>
-    concept primitive = std::same_as<std::remove_cvref_t<T>, Undefined>
-                        || std::same_as<std::remove_cvref_t<T>, Null>
-                        || std::same_as<std::remove_cvref_t<T>, Boolean>
-                        || std::same_as<std::remove_cvref_t<T>, Number>
-                        || std::same_as<std::remove_cvref_t<T>, String>
-                        || std::same_as<std::remove_cvref_t<T>, Array>
-                        || std::same_as<std::remove_cvref_t<T>, Object>;
+    concept primitive = std::same_as<std::decay_t<T>, Undefined>
+                        || std::same_as<std::decay_t<T>, Null>
+                        || std::same_as<std::decay_t<T>, Boolean>
+                        || std::same_as<std::decay_t<T>, Number>
+                        || std::same_as<std::decay_t<T>, String>
+                        || std::same_as<std::decay_t<T>, Array>
+                        || std::same_as<std::decay_t<T>, Object>;
 
     template<typename T>
     concept assignable = !node<T> && !node_value<T> && !primitive<T>;
 
     template<typename T>
-    concept integral = std::integral<std::remove_cvref_t<T>> && !primitive<T>;
+    concept integral = std::integral<std::decay_t<T>> && !primitive<T>;
 
     template<typename T>
-    concept floating_point = std::floating_point<std::remove_cvref_t<T>> && !primitive<T>;
+    concept floating_point = std::floating_point<std::decay_t<T>> && !primitive<T>;
 
     template<typename>
     struct is_vector : std::false_type
@@ -43,7 +43,7 @@ namespace json
     };
 
     template<typename T>
-    concept vector = is_vector<std::remove_cvref_t<T>>::value && !primitive<T>;
+    concept vector = is_vector<std::decay_t<T>>::value && !primitive<T>;
 
     template<typename>
     struct is_set : std::false_type
@@ -56,7 +56,7 @@ namespace json
     };
 
     template<typename T>
-    concept set = is_set<std::remove_cvref_t<T>>::value;
+    concept set = is_set<std::decay_t<T>>::value;
 
     template<typename>
     struct is_array : std::false_type
@@ -69,7 +69,7 @@ namespace json
     };
 
     template<typename T>
-    concept array = is_array<std::remove_cvref_t<T>>::value;
+    concept array = is_array<std::decay_t<T>>::value;
 
     template<typename>
     struct is_map : std::false_type
@@ -82,7 +82,7 @@ namespace json
     };
 
     template<typename T>
-    concept map = is_map<std::remove_cvref_t<T>>::value && !primitive<T>;
+    concept map = is_map<std::decay_t<T>>::value && !primitive<T>;
 
     template<typename>
     struct is_optional : std::false_type
@@ -95,7 +95,7 @@ namespace json
     };
 
     template<typename T>
-    concept optional = is_optional<std::remove_cvref_t<T>>::value;
+    concept optional = is_optional<std::decay_t<T>>::value;
 
     template<typename>
     struct is_variant : std::false_type
@@ -108,7 +108,7 @@ namespace json
     };
 
     template<typename T>
-    concept variant = is_variant<std::remove_cvref_t<T>>::value;
+    concept variant = is_variant<std::decay_t<T>>::value;
 
     template<typename>
     struct serializer
