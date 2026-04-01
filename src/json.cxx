@@ -135,10 +135,10 @@ std::ostream &json::Node::Print(std::ostream &stream) const
 
         void operator()(const Array &value) const
         {
-            auto &depth = get_context_depth(stream);
-
             if (stream.width())
             {
+                auto &depth = get_context_depth(stream);
+
                 stream << '[';
                 if (value.size() > 1)
                     stream << '\n';
@@ -159,24 +159,22 @@ std::ostream &json::Node::Print(std::ostream &stream) const
             else
             {
                 stream << '[';
-                depth++;
                 for (auto it = value.begin(); it != value.end(); ++it)
                 {
                     if (it != value.begin())
                         stream << ',';
                     stream << *it;
                 }
-                depth--;
                 stream << ']';
             }
         }
 
         void operator()(const Object &value) const
         {
-            auto &depth = get_context_depth(stream);
-
             if (stream.width())
             {
+                auto &depth = get_context_depth(stream);
+
                 stream << '{';
                 if (!value.empty())
                     stream << '\n';
@@ -195,14 +193,12 @@ std::ostream &json::Node::Print(std::ostream &stream) const
             else
             {
                 stream << '{';
-                depth++;
                 for (auto it = value.begin(); it != value.end(); ++it)
                 {
                     if (it != value.begin())
                         stream << ',';
                     stream << Node(it->first) << ':' << it->second;
                 }
-                depth--;
                 stream << '}';
             }
         }
