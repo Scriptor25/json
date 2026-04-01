@@ -109,4 +109,10 @@ namespace json
 
     template<typename T>
     concept variant = is_variant<std::remove_cvref_t<T>>::value;
+
+    template<typename T>
+    struct serializer
+    {
+        static constexpr auto enable = false;
+    };
 }

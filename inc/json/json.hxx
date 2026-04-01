@@ -103,9 +103,6 @@ namespace json
         Node &operator=(T &&value);
 
         template<typename T>
-        bool operator>>(T &value);
-
-        template<typename T>
         bool operator>>(T &value) const;
 
         template<primitive T>
@@ -151,6 +148,12 @@ namespace json
     std::istream &operator>>(std::istream &stream, Node &node);
 }
 
+template<typename T>
+bool from_json(const json::Node &node, T &value) = delete;
+
+template<typename T>
+void to_json(json::Node &node, T &&value) = delete;
+
 template<json::primitive T>
 bool from_json(const json::Node &node, T &value)
 {
@@ -172,9 +175,7 @@ void to_json(json::Node &node, T &&value)
 template<json::floating_point T>
 bool from_json(const json::Node &node, T &value)
 {
-    using ::from_json;
-
-    if (json::Number val; from_json(node, val))
+    if (json::Number val; node >> val)
     {
         value = static_cast<T>(val);
         return true;
@@ -186,17 +187,13 @@ bool from_json(const json::Node &node, T &value)
 template<json::floating_point T>
 void to_json(json::Node &node, T &&value)
 {
-    using ::to_json;
-
-    to_json(node, static_cast<json::Number>(std::forward<T>(value)));
+    node = static_cast<json::Number>(std::forward<T>(value));
 }
 
 template<json::integral T>
 bool from_json(const json::Node &node, T &value)
 {
-    using ::from_json;
-
-    if (json::Number val; from_json(node, val))
+    if (json::Number val; node >> val)
     {
         value = static_cast<T>(val);
         return true;
@@ -208,16 +205,12 @@ bool from_json(const json::Node &node, T &value)
 template<json::integral T>
 void to_json(json::Node &node, T &&value)
 {
-    using ::to_json;
-
-    to_json(node, static_cast<json::Number>(std::forward<T>(value)));
+    node = static_cast<json::Number>(std::forward<T>(value));
 }
 
 template<typename T>
 bool from_json(const json::Node &node, std::vector<T> &value)
 {
-    using ::from_json;
-
     if (!node.Is<json::Array>())
         return false;
 
@@ -225,7 +218,7 @@ bool from_json(const json::Node &node, std::vector<T> &value)
 
     auto ok = true;
     for (std::size_t i = 0; i < node.size(); ++i)
-        ok &= from_json(node[i], value[i]);
+        ok &= node[i] >> value[i];
 
     return ok;
 }
@@ -233,19 +226,15 @@ bool from_json(const json::Node &node, std::vector<T> &value)
 template<json::vector T>
 void to_json(json::Node &node, T &&value)
 {
-    using ::to_json;
-
     node = json::Array(value.size());
 
     for (std::size_t i = 0; i < value.size(); ++i)
-        to_json(node[i], value[i]);
+        node[i] = value[i];
 }
 
 template<typename T, std::size_t S>
 bool from_json(const json::Node &node, std::array<T, S> &value)
 {
-    using ::from_json;
-
     if (!node.Is<json::Array>() || node.size() != S)
         return false;
 
@@ -253,7 +242,7 @@ bool from_json(const json::Node &node, std::array<T, S> &value)
 
     auto ok = true;
     for (std::size_t i = 0; i < S; ++i)
-        ok &= from_json(node[i], value[i]);
+        ok &= node[i] >> value[i];
 
     return ok;
 }
@@ -261,20 +250,16 @@ bool from_json(const json::Node &node, std::array<T, S> &value)
 template<json::array T>
 void to_json(json::Node &node, T &&value)
 {
-    using ::to_json;
-
     node = json::Array(value.size());
 
     for (std::size_t i = 0; i < value.size(); ++i)
-        to_json(node[i], value[i]);
+        node[i] = value[i];
 }
 
 template<typename T>
 bool from_json(const json::Node &node, std::set<T> &value)
 {
-    using ::from_json;
-
-    if (std::vector<T> val; from_json(node, val))
+    if (std::vector<T> val; node >> val)
     {
         value = { std::make_move_iterator(val.begin()), std::make_move_iterator(val.end()) };
         return true;
@@ -286,22 +271,18 @@ bool from_json(const json::Node &node, std::set<T> &value)
 template<json::set T>
 void to_json(json::Node &node, T &&value)
 {
-    using ::to_json;
-
-    to_json(node, std::vector(value.begin(), value.end()));
+    node = std::vector(value.begin(), value.end());
 }
 
 template<typename T>
 bool from_json(const json::Node &node, std::map<json::Key, T> &value)
 {
-    using ::from_json;
-
     if (!node.Is<json::Object>())
         return false;
 
     auto ok = true;
     for (auto &&[key, val] : node)
-        ok &= from_json(val, value[key]);
+        ok &= val >> value[key];
 
     return ok;
 }
@@ -309,26 +290,22 @@ bool from_json(const json::Node &node, std::map<json::Key, T> &value)
 template<json::map T>
 void to_json(json::Node &node, T &&value)
 {
-    using ::to_json;
-
     node = json::Object();
 
     for (auto &&[key, val] : value)
-        to_json(node[key], val);
+        node[key] = val;
 }
 
 template<typename T>
 bool from_json(const json::Node &node, std::optional<T> &value)
 {
-    using ::from_json;
-
     if (node.Is<json::Undefined>() || node.Is<json::Null>())
     {
         value = std::nullopt;
         return true;
     }
 
-    if (T val; from_json(node, val))
+    if (T val; node >> val)
     {
         value = std::move(val);
         return true;
@@ -340,11 +317,9 @@ bool from_json(const json::Node &node, std::optional<T> &value)
 template<json::optional T>
 void to_json(json::Node &node, T &&value)
 {
-    using ::to_json;
-
     if (value.has_value())
     {
-        to_json(node, value.value());
+        node = value.value();
         return;
     }
 
@@ -354,11 +329,9 @@ void to_json(json::Node &node, T &&value)
 template<typename... T>
 bool from_json(const json::Node &node, std::variant<T...> &value)
 {
-    using ::from_json;
-
     return ([&]() -> bool
     {
-        if (T val; from_json(node, val))
+        if (T val; node >> val)
         {
             value = std::move(val);
             return true;
@@ -370,22 +343,18 @@ bool from_json(const json::Node &node, std::variant<T...> &value)
 template<json::variant T>
 void to_json(json::Node &node, T &&value)
 {
-    using ::to_json;
-
     std::visit(
         [&node]<typename V>(V &&val)
         {
-            to_json(node, val);
+            node = val;
         },
         std::forward<T>(value));
 }
 
 template<typename T>
-bool from_json_opt(json::Node &node, T &value, T default_value)
+bool from_json_opt(const json::Node &node, T &value, T default_value)
 {
-    using ::from_json;
-
-    if (std::optional<T> val; from_json(node, val))
+    if (std::optional<T> val; node >> val)
     {
         value = val.value_or(std::move(default_value));
         return true;
@@ -396,36 +365,62 @@ bool from_json_opt(json::Node &node, T &value, T default_value)
 
 namespace json
 {
+    template<typename T>
+    struct from_json_fn
+    {
+        using value_type = T;
+        using serializer_type = serializer<std::decay_t<T>>;
+
+        bool operator()(const Node &node, T &value) const
+        {
+            if constexpr (serializer_type::enable)
+            {
+                return serializer_type::from_json(node, std::forward<T>(value));
+            }
+            else
+            {
+                using ::from_json;
+                return from_json(node, std::forward<T>(value));
+            }
+        }
+    };
+
+    template<typename T>
+    struct to_json_fn
+    {
+        using value_type = T;
+        using serializer_type = serializer<std::decay_t<T>>;
+
+        void operator()(Node &node, T &&value) const
+        {
+            if constexpr (serializer_type::enable)
+            {
+                serializer_type::to_json(node, std::forward<T>(value));
+            }
+            else
+            {
+                using ::to_json;
+                to_json(node, std::forward<T>(value));
+            }
+        }
+    };
+
     template<assignable T>
     Node::Node(T &&value)
     {
-        using ::to_json;
-
-        to_json(*this, std::forward<T>(value));
+        to_json_fn(*this, std::forward<T>(value));
     }
 
     template<assignable T>
     Node &Node::operator=(T &&value)
     {
-        using ::to_json;
-
-        to_json(*this, std::forward<T>(value));
+        to_json_fn(*this, std::forward<T>(value));
         return *this;
-    }
-
-    template<typename T>
-    bool Node::operator>>(T &value)
-    {
-        using ::from_json;
-
-        return from_json(*this, value);
     }
 
     template<typename T>
     bool Node::operator>>(T &value) const
     {
-        using ::from_json;
-
-        return from_json(*this, value);
+        return from_json_fn(*this, value);
     }
 }
