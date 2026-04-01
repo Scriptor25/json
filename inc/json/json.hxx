@@ -207,21 +207,23 @@ void to_json(json::Node &node, T &&value);
 template<json::node N, typename T>
 bool from_json_opt(N &&node, T &value, T default_value = {});
 
+template<json::node N, typename T>
+bool operator>>(N &&node, T &value)
+{
+    using ::from_json;
+    return ::from_json(std::forward<N>(node), value);
+}
+
+template<typename T>
+json::Node &operator<<(json::Node &node, T &&value)
+{
+    using ::to_json;
+    ::to_json(node, std::forward<T>(value));
+    return node;
+}
+
 namespace json
 {
-    template<node N, typename T>
-    bool operator>>(N &&node, T &value)
-    {
-        return ::from_json(std::forward<N>(node), value);
-    }
-
-    template<typename T>
-    Node &operator<<(Node &node, T &&value)
-    {
-        ::to_json(node, std::forward<T>(value));
-        return node;
-    }
-
     struct Node final
     {
         template<typename T, typename V, typename M>
