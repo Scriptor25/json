@@ -116,7 +116,7 @@ std::ostream &json::Node::Print(std::ostream &stream) const
                         for (; x >= 0 && val > 0; --x)
                         {
                             auto [quot, rem] = std::div(val, 0x10);
-                            buffer[x] = rem < 10 ? rem + '0' : rem - 10 + 'A';
+                            buffer[x] = static_cast<char>(rem < 10 ? rem + '0' : rem - 10 + 'A');
                             val = quot;
                         }
 

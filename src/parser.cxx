@@ -58,7 +58,7 @@ json::Node json::Parser::ParseNull()
 {
     if (!Skip("null"))
         return {};
-    return Node(nullptr);
+    return nullptr;
 }
 
 json::Node json::Parser::ParseBoolean()
@@ -67,12 +67,12 @@ json::Node json::Parser::ParseBoolean()
     {
         if (!Skip("false"))
             return {};
-        return Node(false);
+        return false;
     }
 
     if (!Skip("true"))
         return {};
-    return Node(true);
+    return true;
 }
 
 json::Node json::Parser::ParseNumber()
@@ -123,7 +123,7 @@ json::Node json::Parser::ParseNumber()
         while ('0' <= m_Buffer && m_Buffer <= '9');
     }
 
-    return Node(std::stold(buffer, nullptr));
+    return std::stold(buffer, nullptr);
 }
 
 json::Node json::Parser::ParseString()
@@ -186,7 +186,7 @@ json::Node json::Parser::ParseString()
         }
     }
 
-    return Node(std::move(value));
+    return std::move(value);
 }
 
 json::Node json::Parser::ParseArray()
@@ -214,7 +214,7 @@ json::Node json::Parser::ParseArray()
             return {};
     }
 
-    return Node(std::move(nodes));
+    return std::move(nodes);
 }
 
 json::Node json::Parser::ParseObject()
@@ -253,7 +253,7 @@ json::Node json::Parser::ParseObject()
             return {};
     }
 
-    return Node(std::move(nodes));
+    return std::move(nodes);
 }
 
 void json::Parser::Get()
