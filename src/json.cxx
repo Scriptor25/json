@@ -2,6 +2,8 @@
 #include <json/parser.hxx>
 #include <json/utf8.hxx>
 
+#include <ostream>
+
 static auto &get_context_depth(std::ostream &stream)
 {
     static const auto index = std::ios_base::xalloc();

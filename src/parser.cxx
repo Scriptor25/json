@@ -2,6 +2,8 @@
 #include <json/parser.hxx>
 #include <json/utf8.hxx>
 
+#include <istream>
+
 json::Parser::Parser(std::istream &stream)
     : m_Stream(stream),
       m_Buffer(stream.get())
@@ -254,7 +256,7 @@ void json::Parser::Get()
     m_Buffer = m_Stream.get();
 }
 
-char32_t json::Parser::Pop()
+char json::Parser::Pop()
 {
     const auto buffer = m_Buffer;
     m_Buffer = m_Stream.get();
@@ -281,12 +283,12 @@ unsigned char json::Parser::PopByte()
     return (hi & 0xF) << 4 | lo & 0xF;
 }
 
-bool json::Parser::At(const char32_t c) const
+bool json::Parser::At(const char c) const
 {
     return m_Buffer == c;
 }
 
-bool json::Parser::Skip(const char32_t c)
+bool json::Parser::Skip(const char c)
 {
     const auto skip = m_Buffer == c;
     if (skip)
@@ -302,7 +304,7 @@ bool json::Parser::Skip(const std::string_view s)
     return true;
 }
 
-static bool is_whitespace(const char32_t c)
+static bool is_whitespace(const int c)
 {
     return c == ' ' || c == '\n' || c == '\r' || c == '\t';
 }

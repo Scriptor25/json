@@ -1,7 +1,6 @@
 #pragma once
 
 #include <json/json.hxx>
-#include <json/utf8.hxx>
 
 namespace json
 {
@@ -21,19 +20,19 @@ namespace json
         Node ParseObject();
 
         void Get();
-        char32_t Pop();
+        char Pop();
 
         unsigned char PopHalfByte();
         unsigned char PopByte();
 
-        [[nodiscard]] bool At(char32_t c) const;
+        [[nodiscard]] bool At(char c) const;
 
-        bool Skip(char32_t c);
+        bool Skip(char c);
         bool Skip(std::string_view s);
         bool SkipWhitespace();
 
     private:
-        utf8::istream m_Stream;
-        char32_t m_Buffer;
+        std::istream &m_Stream;
+        int m_Buffer;
     };
 }
