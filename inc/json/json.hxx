@@ -330,19 +330,19 @@ namespace json
             return *this;
         }
 
-        template<typename T>
+        template<primitive T>
         auto Is() const
         {
             return std::holds_alternative<T>(Value);
         }
 
-        template<typename T>
+        template<primitive T>
         auto &&Get()
         {
             return std::get<T>(Value);
         }
 
-        template<typename T>
+        template<primitive T>
         auto &&Get() const
         {
             return std::get<T>(Value);
