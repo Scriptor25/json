@@ -2,6 +2,7 @@
 #include <json/parser.hxx>
 #include <json/utf8.hxx>
 
+#include <iomanip>
 #include <ostream>
 
 static auto &get_context_depth(std::ostream &stream)
@@ -11,12 +12,11 @@ static auto &get_context_depth(std::ostream &stream)
     return stream.iword(index);
 }
 
-static std::ostream &depth_space(std::ostream &stream)
+static std::ostream &indent_depth(std::ostream &stream, std::size_t indent)
 {
     const auto &depth = get_context_depth(stream);
 
-    const auto width = stream.width();
-    const std::string buffer(width, ' ');
+    const std::string buffer(indent, ' ');
 
     for (unsigned i = 0; i < depth; ++i)
         stream << buffer;
@@ -51,7 +51,7 @@ bool json::Node::operator!() const
     return Is<Undefined>();
 }
 
-std::ostream &json::Node::Print(std::ostream &stream) const
+std::ostream &json::Node::Print(std::ostream &stream, std::size_t indent) const
 {
     struct
     {
@@ -112,26 +112,7 @@ std::ostream &json::Node::Print(std::ostream &stream) const
                     if (0x20 <= c && c < 0x7F)
                         stream << static_cast<char>(c);
                     else
-                    {
-                        auto val = static_cast<int>(c);
-                        stream << "\\u";
-
-                        char buffer[5];
-                        int x = sizeof(buffer) - 1;
-                        buffer[x--] = '\0';
-
-                        for (; x >= 0 && val > 0; --x)
-                        {
-                            auto [quot, rem] = std::div(val, 0x10);
-                            buffer[x] = static_cast<char>(rem < 10 ? rem + '0' : rem - 10 + 'A');
-                            val = quot;
-                        }
-
-                        for (; x >= 0; --x)
-                            buffer[x] = '0';
-
-                        stream << buffer;
-                    }
+                        stream << "\\u" << std::setw(4) << std::setfill('0') << static_cast<int>(c);
                     break;
                 }
 
@@ -140,7 +121,7 @@ std::ostream &json::Node::Print(std::ostream &stream) const
 
         void operator()(const Array &value) const
         {
-            if (stream.width())
+            if (indent)
             {
                 auto &depth = get_context_depth(stream);
 
@@ -153,12 +134,12 @@ std::ostream &json::Node::Print(std::ostream &stream) const
                     if (it != value.begin())
                         stream << ',' << '\n';
                     if (value.size() > 1)
-                        stream << depth_space;
+                        indent_depth(stream, indent);
                     stream << *it;
                 }
                 depth--;
                 if (value.size() > 1)
-                    stream << '\n' << depth_space;
+                    indent_depth(stream << '\n', indent);
                 stream << ']';
             }
             else
@@ -176,7 +157,7 @@ std::ostream &json::Node::Print(std::ostream &stream) const
 
         void operator()(const Object &value) const
         {
-            if (stream.width())
+            if (indent)
             {
                 auto &depth = get_context_depth(stream);
 
@@ -188,11 +169,11 @@ std::ostream &json::Node::Print(std::ostream &stream) const
                 {
                     if (it != value.begin())
                         stream << ',' << '\n';
-                    stream << depth_space << Node(it->first) << ": " << it->second;
+                    indent_depth(stream, indent) << Node(it->first) << ": " << it->second;
                 }
                 depth--;
                 if (!value.empty())
-                    stream << '\n' << depth_space;
+                    indent_depth(stream << '\n', indent);
                 stream << '}';
             }
             else
@@ -209,7 +190,8 @@ std::ostream &json::Node::Print(std::ostream &stream) const
         }
 
         std::ostream &stream;
-    } visitor{ stream };
+        std::size_t indent;
+    } visitor{ stream, indent };
 
     std::visit(visitor, Value);
 
@@ -369,7 +351,10 @@ json::Node json::Node::operator[](const std::string &key) const
 
 std::ostream &json::operator<<(std::ostream &stream, const Node &node)
 {
-    return node.Print(stream);
+    auto indent = stream.width();
+    stream.width(0);
+
+    return node.Print(stream, indent);
 }
 
 std::istream &json::operator>>(std::istream &stream, Node &node)

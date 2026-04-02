@@ -125,7 +125,7 @@ namespace json
 
         bool operator!() const;
 
-        std::ostream &Print(std::ostream &stream) const;
+        std::ostream &Print(std::ostream &stream, std::size_t indent) const;
 
         iterator begin();
         iterator end();
