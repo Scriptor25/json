@@ -16,12 +16,9 @@ static std::ostream &indent_depth(std::ostream &stream, std::size_t indent)
 {
     const auto &depth = get_context_depth(stream);
 
-    const std::string buffer(indent, ' ');
+    const std::string buffer(indent * depth, ' ');
 
-    for (unsigned i = 0; i < depth; ++i)
-        stream << buffer;
-
-    return stream;
+    return stream << buffer;
 }
 
 json::Node::Node(const NodeValue &value)
@@ -135,7 +132,7 @@ std::ostream &json::Node::Print(std::ostream &stream, std::size_t indent) const
                         stream << ',' << '\n';
                     if (value.size() > 1)
                         indent_depth(stream, indent);
-                    stream << *it;
+                    it->Print(stream, indent);
                 }
                 depth--;
                 if (value.size() > 1)
@@ -149,7 +146,7 @@ std::ostream &json::Node::Print(std::ostream &stream, std::size_t indent) const
                 {
                     if (it != value.begin())
                         stream << ',';
-                    stream << *it;
+                    it->Print(stream, indent);
                 }
                 stream << ']';
             }
@@ -169,7 +166,7 @@ std::ostream &json::Node::Print(std::ostream &stream, std::size_t indent) const
                 {
                     if (it != value.begin())
                         stream << ',' << '\n';
-                    indent_depth(stream, indent) << Node(it->first) << ": " << it->second;
+                    it->second.Print(Node(it->first).Print(indent_depth(stream, indent), indent) << ": ", indent);
                 }
                 depth--;
                 if (!value.empty())
@@ -183,7 +180,7 @@ std::ostream &json::Node::Print(std::ostream &stream, std::size_t indent) const
                 {
                     if (it != value.begin())
                         stream << ',';
-                    stream << Node(it->first) << ':' << it->second;
+                    it->second.Print(Node(it->first).Print(stream, indent) << ':', indent);
                 }
                 stream << '}';
             }
