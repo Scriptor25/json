@@ -124,8 +124,10 @@ std::ostream &json::Node::Print(std::ostream &stream, std::size_t indent) const
 
                 stream << '[';
                 if (value.size() > 1)
+                {
                     stream << '\n';
-                depth++;
+                    depth++;
+                }
                 for (auto it = value.begin(); it != value.end(); ++it)
                 {
                     if (it != value.begin())
@@ -134,9 +136,11 @@ std::ostream &json::Node::Print(std::ostream &stream, std::size_t indent) const
                         indent_depth(stream, indent);
                     it->Print(stream, indent);
                 }
-                depth--;
                 if (value.size() > 1)
+                {
+                    depth--;
                     indent_depth(stream << '\n', indent);
+                }
                 stream << ']';
             }
             else
