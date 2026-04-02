@@ -12,8 +12,6 @@ namespace json
         Node Parse();
 
     protected:
-        Node ParseNull();
-        Node ParseBoolean();
         Node ParseNumber();
         Node ParseString();
         Node ParseArray();

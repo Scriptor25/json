@@ -18,7 +18,8 @@ namespace json
     concept primitive = std::same_as<std::decay_t<T>, Undefined>
                         || std::same_as<std::decay_t<T>, Null>
                         || std::same_as<std::decay_t<T>, Boolean>
-                        || std::same_as<std::decay_t<T>, Number>
+                        || std::same_as<std::decay_t<T>, Integer>
+                        || std::same_as<std::decay_t<T>, FloatingPoint>
                         || std::same_as<std::decay_t<T>, String>
                         || std::same_as<std::decay_t<T>, Array>
                         || std::same_as<std::decay_t<T>, Object>;

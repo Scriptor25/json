@@ -15,7 +15,8 @@ namespace json
     using Undefined = std::monostate;
     using Null = std::nullptr_t;
     using Boolean = bool;
-    using Number = long double;
+    using Integer = long long;
+    using FloatingPoint = long double;
     using String = std::string;
     using Array = std::vector<Node>;
     using Object = std::map<Key, Node>;
@@ -24,7 +25,8 @@ namespace json
         Undefined,
         Null,
         Boolean,
-        Number,
+        Integer,
+        FloatingPoint,
         String,
         Array,
         Object

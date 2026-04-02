@@ -1,5 +1,8 @@
 #pragma once
 
+#include <concepts>
+#include <string>
+
 namespace json::utf8
 {
     template<typename T>

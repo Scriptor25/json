@@ -70,7 +70,12 @@ std::ostream &json::Node::Print(std::ostream &stream) const
             stream << (value ? "true" : "false");
         }
 
-        void operator()(const Number value) const
+        void operator()(const Integer value) const
+        {
+            stream << value;
+        }
+
+        void operator()(const FloatingPoint value) const
         {
             stream << std::scientific << value;
         }

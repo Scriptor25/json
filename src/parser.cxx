@@ -19,11 +19,19 @@ json::Node json::Parser::Parse()
     switch (m_Buffer)
     {
     case 'n':
-        node = ParseNull();
+        if (!Skip("null"))
+            return {};
+        node = nullptr;
         break;
     case 'f':
+        if (!Skip("false"))
+            return {};
+        node = false;
+        break;
     case 't':
-        node = ParseBoolean();
+        if (!Skip("true"))
+            return {};
+        node = true;
         break;
     case '-':
     case '0':
@@ -56,50 +64,27 @@ json::Node json::Parser::Parse()
     return node;
 }
 
-json::Node json::Parser::ParseNull()
-{
-    if (!Skip("null"))
-        return {};
-    return nullptr;
-}
-
-json::Node json::Parser::ParseBoolean()
-{
-    if (At('f'))
-    {
-        if (!Skip("false"))
-            return {};
-        return false;
-    }
-
-    if (!Skip("true"))
-        return {};
-    return true;
-}
-
 json::Node json::Parser::ParseNumber()
 {
     std::u32string buffer;
+    auto floating_point = false;
 
     if (At('-'))
         buffer += Pop();
 
     if (At('0'))
-    {
         buffer += Pop();
-    }
     else if ('1' <= m_Buffer && m_Buffer <= '9')
-    {
         do
             buffer += Pop();
         while ('0' <= m_Buffer && m_Buffer <= '9');
-    }
     else
         return {};
 
     if (At('.'))
     {
         buffer += Pop();
+        floating_point = true;
 
         if (!('0' <= m_Buffer && m_Buffer <= '9'))
             return {};
@@ -112,6 +97,7 @@ json::Node json::Parser::ParseNumber()
     if (At('e') || At('E'))
     {
         buffer += Pop();
+        floating_point = true;
 
         if (At('-') || At('+'))
             buffer += Pop();
@@ -124,7 +110,10 @@ json::Node json::Parser::ParseNumber()
         while ('0' <= m_Buffer && m_Buffer <= '9');
     }
 
-    return std::stold(utf8::encode(buffer), nullptr);
+    if (floating_point)
+        return std::stold(utf8::encode(buffer), nullptr);
+
+    return std::stoll(utf8::encode(buffer), nullptr);
 }
 
 json::Node json::Parser::ParseString()

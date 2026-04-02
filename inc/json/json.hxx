@@ -188,7 +188,7 @@ void to_json(json::Node &node, T &&value)
 template<json::floating_point T>
 bool from_json(const json::Node &node, T &value)
 {
-    if (json::Number val; node >> val)
+    if (json::FloatingPoint val; node >> val)
     {
         value = static_cast<T>(val);
         return true;
@@ -200,13 +200,13 @@ bool from_json(const json::Node &node, T &value)
 template<json::floating_point T>
 void to_json(json::Node &node, T &&value)
 {
-    node = static_cast<json::Number>(std::forward<T>(value));
+    node = static_cast<json::FloatingPoint>(std::forward<T>(value));
 }
 
 template<json::integral T>
 bool from_json(const json::Node &node, T &value)
 {
-    if (json::Number val; node >> val)
+    if (json::Integer val; node >> val)
     {
         value = static_cast<T>(val);
         return true;
@@ -218,7 +218,7 @@ bool from_json(const json::Node &node, T &value)
 template<json::integral T>
 void to_json(json::Node &node, T &&value)
 {
-    node = static_cast<json::Number>(std::forward<T>(value));
+    node = static_cast<json::Integer>(std::forward<T>(value));
 }
 
 template<typename T>
