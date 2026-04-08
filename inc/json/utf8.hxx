@@ -5,8 +5,10 @@
 
 namespace json::utf8
 {
-    template<typename T>
-        requires std::same_as<std::decay_t<T>, std::u32string>
+    template<typename T, typename E>
+    concept same_as = std::same_as<std::decay_t<T>, std::decay_t<E>>;
+
+    template<same_as<std::u32string> T>
     std::string encode(T &&str)
     {
         std::string result;
@@ -52,8 +54,7 @@ namespace json::utf8
         return result;
     }
 
-    template<typename T>
-        requires std::same_as<std::decay_t<T>, std::string>
+    template<same_as<std::string> T>
     std::u32string decode(T &&str)
     {
         std::u32string result;

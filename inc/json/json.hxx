@@ -378,64 +378,54 @@ bool from_json_opt(const json::Node &node, T &value, T default_value = {})
 
 namespace json
 {
-    struct from_json_fn
+    template<typename T>
+    bool from_json_fn(const Node &node, T &value)
     {
-        template<typename T>
-        bool operator()(const Node &node, T &value) const
+        using U = std::decay_t<T>;
+
+        if constexpr (enable_from_json<U>)
         {
-            using U = std::decay_t<T>;
-
-            if constexpr (enable_from_json<U>)
-            {
-                return serializer<U>::from_json(node, value);
-            }
-            else
-            {
-                using ::from_json;
-                return from_json(node, value);
-            }
+            return serializer<U>::from_json(node, value);
         }
-    };
+        else
+        {
+            using ::from_json;
+            return from_json(node, value);
+        }
+    }
 
-    inline constexpr from_json_fn from_json_dispatch;
-
-    struct to_json_fn
+    template<typename T>
+    void to_json_fn(Node &node, T &&value)
     {
-        template<typename T>
-        void operator()(Node &node, T &&value) const
+        using U = std::decay_t<T>;
+
+        if constexpr (enable_to_json<U>)
         {
-            using U = std::decay_t<T>;
-
-            if constexpr (enable_to_json<U>)
-            {
-                return serializer<U>::to_json(node, std::forward<T>(value));
-            }
-            else
-            {
-                using ::to_json;
-                return to_json(node, std::forward<T>(value));
-            }
+            return serializer<U>::to_json(node, std::forward<T>(value));
         }
-    };
-
-    inline constexpr to_json_fn to_json_dispatch;
+        else
+        {
+            using ::to_json;
+            return to_json(node, std::forward<T>(value));
+        }
+    }
 
     template<assignable T>
     Node::Node(T &&value)
     {
-        to_json_dispatch(*this, std::forward<T>(value));
+        to_json_fn(*this, std::forward<T>(value));
     }
 
     template<assignable T>
     Node &Node::operator=(T &&value)
     {
-        to_json_dispatch(*this, std::forward<T>(value));
+        to_json_fn(*this, std::forward<T>(value));
         return *this;
     }
 
     template<typename T>
     bool Node::operator>>(T &value) const
     {
-        return from_json_dispatch(*this, value);
+        return from_json_fn(*this, value);
     }
 }

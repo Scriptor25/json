@@ -5,6 +5,7 @@
 #include <concepts>
 #include <optional>
 #include <set>
+#include <type_traits>
 
 namespace json
 {
@@ -14,15 +15,21 @@ namespace json
     template<typename T>
     concept node_value = std::same_as<std::decay_t<T>, NodeValue>;
 
+    template<typename T, typename V>
+    struct in_variant_t : std::false_type
+    {
+    };
+    
+    template<typename T, typename... E>
+    struct in_variant_t<T, std::variant<E...>> : std::disjunction<std::is_same<T, E>...>
+    {
+    };
+
+    template<typename T, typename V>
+    concept in_variant = in_variant_t<T, V>::value;
+
     template<typename T>
-    concept primitive = std::same_as<std::decay_t<T>, Undefined>
-                        || std::same_as<std::decay_t<T>, Null>
-                        || std::same_as<std::decay_t<T>, Boolean>
-                        || std::same_as<std::decay_t<T>, Integer>
-                        || std::same_as<std::decay_t<T>, FloatingPoint>
-                        || std::same_as<std::decay_t<T>, String>
-                        || std::same_as<std::decay_t<T>, Array>
-                        || std::same_as<std::decay_t<T>, Object>;
+    concept primitive = in_variant<std::decay_t<T>, NodeValue>;
 
     template<typename T>
     concept assignable = !node<T> && !node_value<T> && !primitive<T>;
@@ -34,82 +41,82 @@ namespace json
     concept floating_point = std::floating_point<std::decay_t<T>> && !primitive<T>;
 
     template<typename>
-    struct is_vector : std::false_type
+    struct is_vector_t : std::false_type
     {
     };
 
     template<typename... Args>
-    struct is_vector<std::vector<Args...>> : std::true_type
+    struct is_vector_t<std::vector<Args...>> : std::true_type
     {
     };
 
     template<typename T>
-    concept vector = is_vector<std::decay_t<T>>::value && !primitive<T>;
+    concept vector = is_vector_t<std::decay_t<T>>::value && !primitive<T>;
 
     template<typename>
-    struct is_set : std::false_type
+    struct is_set_t : std::false_type
     {
     };
 
     template<typename... Args>
-    struct is_set<std::set<Args...>> : std::true_type
+    struct is_set_t<std::set<Args...>> : std::true_type
     {
     };
 
     template<typename T>
-    concept set = is_set<std::decay_t<T>>::value;
+    concept set = is_set_t<std::decay_t<T>>::value;
 
     template<typename>
-    struct is_array : std::false_type
+    struct is_array_t : std::false_type
     {
     };
 
     template<typename T, std::size_t N>
-    struct is_array<std::array<T, N>> : std::true_type
+    struct is_array_t<std::array<T, N>> : std::true_type
     {
     };
 
     template<typename T>
-    concept array = is_array<std::decay_t<T>>::value;
+    concept array = is_array_t<std::decay_t<T>>::value;
 
     template<typename>
-    struct is_map : std::false_type
+    struct is_map_t : std::false_type
     {
     };
 
     template<typename... Args>
-    struct is_map<std::map<Args...>> : std::true_type
+    struct is_map_t<std::map<Args...>> : std::true_type
     {
     };
 
     template<typename T>
-    concept map = is_map<std::decay_t<T>>::value && !primitive<T>;
+    concept map = is_map_t<std::decay_t<T>>::value && !primitive<T>;
 
     template<typename>
-    struct is_optional : std::false_type
+    struct is_optional_t : std::false_type
     {
     };
 
     template<typename... Args>
-    struct is_optional<std::optional<Args...>> : std::true_type
+    struct is_optional_t<std::optional<Args...>> : std::true_type
     {
     };
 
     template<typename T>
-    concept optional = is_optional<std::decay_t<T>>::value;
+    concept optional = is_optional_t<std::decay_t<T>>::value;
 
     template<typename>
-    struct is_variant : std::false_type
+    struct is_variant_t : std::false_type
     {
     };
 
     template<typename... Args>
-    struct is_variant<std::variant<Args...>> : std::true_type
+    struct is_variant_t<std::variant<Args...>> : std::true_type
     {
     };
 
     template<typename T>
-    concept variant = is_variant<std::decay_t<T>>::value;
+    concept variant = is_variant_t<std::decay_t<T>>::value;
 
     template<typename>
     struct serializer
