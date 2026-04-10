@@ -342,15 +342,19 @@ void to_json(json::Node &node, T &&value)
 template<typename... T>
 bool from_json(const json::Node &node, std::variant<T...> &value)
 {
-    return ([&]() -> bool
+    using V = std::variant<T...>;
+
+    auto try_from_json = [&]<typename U>() -> bool
     {
-        if (T val; node >> val)
+        if (U val; node >> val)
         {
             value = std::move(val);
             return true;
         }
         return false;
-    }() || ...);
+    };
+
+    return (try_from_json.template operator()<T>() || ...);
 }
 
 template<json::variant T>
