@@ -222,7 +222,7 @@ json::Exp<json::Node> json::Parser::ParseString()
 
 json::Exp<json::Node> json::Parser::ParseArray()
 {
-    Node::Vec nodes;
+    Array nodes;
 
     if (!Skip('['))
     {
@@ -256,7 +256,7 @@ json::Exp<json::Node> json::Parser::ParseArray()
 
 json::Exp<json::Node> json::Parser::ParseObject()
 {
-    Node::Map nodes;
+    Object nodes;
 
     if (!Skip('{'))
     {

@@ -79,12 +79,12 @@ toml::Exp<toml::Node> toml::Parser::Parse()
             {
                 if (!*table)
                 {
-                    *table = Node::Vec();
+                    *table = Array();
                 }
 
-                if (table->Is<Node::Vec>())
+                if (table->Is<Array>())
                 {
-                    auto &vec = table->Get<Node::Vec>();
+                    auto &vec = table->Get<Array>();
                     table = &vec.emplace_back();
                 }
                 else
@@ -416,7 +416,7 @@ toml::Exp<toml::Node> toml::Parser::ParseString()
 
 toml::Exp<toml::Node> toml::Parser::ParseArray()
 {
-    Node::Vec nodes;
+    Array nodes;
 
     if (!Skip('['))
     {
@@ -458,7 +458,7 @@ toml::Exp<toml::Node> toml::Parser::ParseArray()
 
 toml::Exp<toml::Node> toml::Parser::ParseTable()
 {
-    Node::Map nodes;
+    Table nodes;
 
     if (!Skip('{'))
     {
@@ -571,10 +571,10 @@ toml::Exp<toml::Node *> toml::Parser::MakeNodeKey(Node &node, const Key &key)
     {
         if (!*ptr)
         {
-            *ptr = Node::Map();
+            *ptr = Table();
         }
 
-        if (ptr->Is<Node::Map>())
+        if (ptr->Is<Table>())
         {
             ptr = &(*ptr)[k];
         }
@@ -586,7 +586,7 @@ toml::Exp<toml::Node *> toml::Parser::MakeNodeKey(Node &node, const Key &key)
     return ptr;
 }
 
-toml::Exp<toml::Node *> toml::Parser::MakeNodeKey(Node::Map &nodes, const Key &key)
+toml::Exp<toml::Node *> toml::Parser::MakeNodeKey(Table &nodes, const Key &key)
 {
     if (key.size() == 1)
     {

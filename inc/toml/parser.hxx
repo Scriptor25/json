@@ -39,7 +39,7 @@ namespace toml
         Exp<Key> ParseKey();
 
         static Exp<Node *> MakeNodeKey(Node &node, const Key &key);
-        static Exp<Node *> MakeNodeKey(Node::Map &nodes, const Key &key);
+        static Exp<Node *> MakeNodeKey(Table &nodes, const Key &key);
 
         void Get();
         char Pop();

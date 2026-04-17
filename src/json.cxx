@@ -93,7 +93,7 @@ static std::ostream &print_fn(std::ostream &stream, const unsigned indent, const
             stream << '"';
         }
 
-        void operator()(const json::Node::Vec &value) const
+        void operator()(const json::Array &value) const
         {
             if (indent)
             {
@@ -168,7 +168,7 @@ static std::ostream &print_fn(std::ostream &stream, const unsigned indent, const
             }
         }
 
-        void operator()(const json::Node::Map &value) const
+        void operator()(const json::Object &value) const
         {
             if (indent)
             {

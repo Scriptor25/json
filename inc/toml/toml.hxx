@@ -8,6 +8,7 @@
 
 namespace toml
 {
+    using Undefined = data::Undefined;
     using Boolean = bool;
     using Integer = data::Integer;
     using FloatingPoint = data::FloatingPoint;

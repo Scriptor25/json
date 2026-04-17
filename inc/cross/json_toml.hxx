@@ -9,7 +9,7 @@ struct data::serializer<toml::LocalDate>
 {
     static bool from_data(const json::Node &node, toml::LocalDate &value)
     {
-        if (!node.Is<json::Node::Map>())
+        if (!node.Is<json::Object>())
             return false;
 
         auto ok = true;
@@ -24,7 +24,7 @@ struct data::serializer<toml::LocalDate>
     template<decay_same_as<toml::LocalDate> T>
     static void to_data(json::Node &node, T &&value)
     {
-        node = json::Node::Map
+        node = json::Object
         {
             { "year", value.Year },
             { "month", value.Month },
@@ -38,7 +38,7 @@ struct data::serializer<toml::LocalTime>
 {
     static bool from_data(const json::Node &node, toml::LocalTime &value)
     {
-        if (!node.Is<json::Node::Map>())
+        if (!node.Is<json::Object>())
             return false;
 
         auto ok = true;
@@ -54,7 +54,7 @@ struct data::serializer<toml::LocalTime>
     template<decay_same_as<toml::LocalTime> T>
     static void to_data(json::Node &node, T &&value)
     {
-        node = json::Node::Map
+        node = json::Object
         {
             { "hour", value.Hour },
             { "minute", value.Minute },
@@ -69,7 +69,7 @@ struct data::serializer<toml::DateTime::TimeOffset>
 {
     static bool from_data(const json::Node &node, toml::DateTime::TimeOffset &value)
     {
-        if (!node.Is<json::Node::Map>())
+        if (!node.Is<json::Object>())
             return false;
 
         auto ok = true;
@@ -83,7 +83,7 @@ struct data::serializer<toml::DateTime::TimeOffset>
     template<decay_same_as<toml::DateTime::TimeOffset> T>
     static void to_data(json::Node &node, T &&value)
     {
-        node = json::Node::Map
+        node = json::Object
         {
             { "hours", value.Hours },
             { "minutes", value.Minutes },
@@ -96,7 +96,7 @@ struct data::serializer<toml::DateTime>
 {
     static bool from_data(const json::Node &node, toml::DateTime &value)
     {
-        if (!node.Is<json::Node::Map>())
+        if (!node.Is<json::Object>())
             return false;
 
         auto ok = true;
@@ -111,7 +111,7 @@ struct data::serializer<toml::DateTime>
     template<decay_same_as<toml::DateTime> T>
     static void to_data(json::Node &node, T &&value)
     {
-        node = json::Node::Map
+        node = json::Object
         {
             { "date", value.Date },
             { "time", value.Time },
@@ -151,7 +151,7 @@ struct data::serializer<std::nullptr_t>
     template<decay_same_as<std::nullptr_t> T>
     static void to_data(toml::Node &node, T &&)
     {
-        node = toml::Node::Undefined();
+        node = toml::Undefined();
     }
 };
 
