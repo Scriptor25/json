@@ -1,35 +1,18 @@
 #pragma once
 
 #include <data/concepts.hxx>
+#include <data/data.hxx>
 #include <data/serializer.hxx>
 
 #include <stdexcept>
 #include <utility>
-#include <variant>
 
 namespace data
 {
-    template<typename N, typename T>
-    bool from_data_fn(const N &node, T &value);
-
-    template<typename N, typename T>
-    void to_data_fn(N &node, T &&value);
-
-    template<typename...>
-    struct NodeTraits;
-
     template<typename... V>
     struct Node
     {
         using Traits = NodeTraits<V...>;
-
-        using Index = unsigned long long;
-        using Key = std::string;
-
-        using Integer = Traits::Integer;
-        using FloatingPoint = Traits::FloatingPoint;
-
-        using Undefined = std::monostate;
 
         using Vec = std::vector<Node>;
         using Map = std::map<Key, Node>;
@@ -399,9 +382,7 @@ void to_data(N &node, T &&value)
 template<data::node N, data::floating_point<N> T>
 bool from_data(const N &node, T &value)
 {
-    using F = N::FloatingPoint;
-
-    if (F val; node >> val)
+    if (data::FloatingPoint val; node >> val)
     {
         value = static_cast<T>(val);
         return true;
@@ -413,17 +394,13 @@ bool from_data(const N &node, T &value)
 template<data::node N, data::floating_point<N> T>
 void to_data(N &node, T &&value)
 {
-    using F = N::FloatingPoint;
-
-    node = static_cast<F>(std::forward<T>(value));
+    node = static_cast<data::FloatingPoint>(std::forward<T>(value));
 }
 
 template<data::node N, data::integral<N> T>
 bool from_data(const N &node, T &value)
 {
-    using I = N::Integer;
-
-    if (I val; node >> val)
+    if (data::Integer val; node >> val)
     {
         value = static_cast<T>(val);
         return true;
@@ -435,9 +412,7 @@ bool from_data(const N &node, T &value)
 template<data::node N, data::integral<N> T>
 void to_data(N &node, T &&value)
 {
-    using I = N::Integer;
-
-    node = static_cast<I>(std::forward<T>(value));
+    node = static_cast<data::Integer>(std::forward<T>(value));
 }
 
 template<data::node N, typename T>
@@ -515,7 +490,7 @@ void to_data(N &node, T &&value)
 }
 
 template<data::node N, typename T>
-bool from_data(const N &node, std::map<typename N::Key, T> &value)
+bool from_data(const N &node, std::map<data::Key, T> &value)
 {
     using Map = N::Map;
 
@@ -561,15 +536,13 @@ bool from_data(const N &node, std::optional<T> &value)
 template<data::node N, data::optional T>
 void to_data(N &node, T &&value)
 {
-    using Undefined = N::Undefined;
-
     if (value.has_value())
     {
         node = value.value();
         return;
     }
 
-    node = Undefined();
+    node = data::Undefined();
 }
 
 template<data::node N, typename... T>

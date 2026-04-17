@@ -1,5 +1,4 @@
 #include <data/utf8.hxx>
-#include <json/json.hxx>
 #include <json/parser.hxx>
 
 #include <istream>
@@ -20,21 +19,33 @@ json::Exp<json::Node> json::Parser::Parse()
     {
     case 'n':
         if (Skip("null"))
+        {
             exp = nullptr;
+        }
         else
+        {
             exp = Error("expected 'null'");
+        }
         break;
     case 'f':
         if (Skip("false"))
+        {
             exp = false;
+        }
         else
+        {
             exp = Error("expected 'false'");
+        }
         break;
     case 't':
         if (Skip("true"))
+        {
             exp = true;
+        }
         else
+        {
             exp = Error("expected 'true'");
+        }
         break;
     case '-':
     case '0':
@@ -73,16 +84,26 @@ json::Exp<json::Node> json::Parser::ParseNumber()
     auto is_float = false;
 
     if (At('-'))
+    {
         buffer += Pop();
+    }
 
     if (At('0'))
+    {
         buffer += Pop();
+    }
     else if ('1' <= m_Buffer && m_Buffer <= '9')
+    {
         do
+        {
             buffer += Pop();
+        }
         while ('0' <= m_Buffer && m_Buffer <= '9');
+    }
     else
+    {
         return Error("expected base 10 digit");
+    }
 
     if (At('.'))
     {
@@ -90,10 +111,14 @@ json::Exp<json::Node> json::Parser::ParseNumber()
         is_float = true;
 
         if (!('0' <= m_Buffer && m_Buffer <= '9'))
+        {
             return Error("expected base 10 digit");
+        }
 
         do
+        {
             buffer += Pop();
+        }
         while ('0' <= m_Buffer && m_Buffer <= '9');
     }
 
@@ -103,18 +128,27 @@ json::Exp<json::Node> json::Parser::ParseNumber()
         is_float = true;
 
         if (At('-') || At('+'))
+        {
             buffer += Pop();
+        }
 
         if (!('0' <= m_Buffer && m_Buffer <= '9'))
+        {
             return Error("expected base 10 digit");
+        }
 
         do
+        {
             buffer += Pop();
+        }
         while ('0' <= m_Buffer && m_Buffer <= '9');
     }
 
     if (is_float)
+    {
         return std::stold(buffer);
+    }
+
     return std::stoll(buffer);
 }
 
@@ -123,7 +157,9 @@ json::Exp<json::Node> json::Parser::ParseString()
     std::u32string value;
 
     if (!Skip('"'))
+    {
         return Error("expected quote");
+    }
 
     while (!Skip('"'))
     {
@@ -163,11 +199,15 @@ json::Exp<json::Node> json::Parser::ParseString()
         {
             const auto hi = PopByte();
             if (!hi)
+            {
                 return Error("{}", hi.error());
+            }
 
             const auto lo = PopByte();
             if (!lo)
+            {
                 return Error("{}", lo.error());
+            }
 
             value.push_back((*hi & 0xff) << 8 | *lo & 0xff);
             break;
@@ -185,7 +225,9 @@ json::Exp<json::Node> json::Parser::ParseArray()
     Node::Vec nodes;
 
     if (!Skip('['))
+    {
         return Error("expected opening bracket");
+    }
 
     SkipWhitespace();
 
@@ -195,14 +237,18 @@ json::Exp<json::Node> json::Parser::ParseArray()
         {
             auto element = Parse();
             if (!element)
+            {
                 return element;
+            }
 
             nodes.push_back(std::move(*element));
         }
         while (Skip(','));
 
         if (!Skip(']'))
+        {
             return Error("expected closing bracket");
+        }
     }
 
     return std::move(nodes);
@@ -213,7 +259,9 @@ json::Exp<json::Node> json::Parser::ParseObject()
     Node::Map nodes;
 
     if (!Skip('{'))
+    {
         return Error("expected opening brace");
+    }
 
     SkipWhitespace();
 
@@ -225,23 +273,31 @@ json::Exp<json::Node> json::Parser::ParseObject()
 
             const auto key = ParseString();
             if (!key)
+            {
                 return key;
+            }
 
             SkipWhitespace();
 
             if (!Skip(':'))
+            {
                 return Error("expected colon");
+            }
 
             auto value = Parse();
             if (!value)
+            {
                 return value;
+            }
 
             nodes[key->Get<String>()] = std::move(*value);
         }
         while (Skip(','));
 
         if (!Skip('}'))
+        {
             return Error("expected closing brace");
+        }
     }
 
     return std::move(nodes);
@@ -263,11 +319,17 @@ json::Exp<unsigned char> json::Parser::PopHalfByte()
 {
     const auto c = Pop();
     if ('0' <= c && c <= '9')
+    {
         return c - '0';
+    }
     if ('A' <= c && c <= 'F')
+    {
         return c - 'A' + 10;
+    }
     if ('a' <= c && c <= 'f')
+    {
         return c - 'a' + 10;
+    }
     return Error("expected base 16 digit");
 }
 
@@ -275,11 +337,15 @@ json::Exp<unsigned char> json::Parser::PopByte()
 {
     const auto hi = PopHalfByte();
     if (!hi)
+    {
         return hi;
+    }
 
     const auto lo = PopHalfByte();
     if (!lo)
+    {
         return lo;
+    }
 
     return (*hi & 0xF) << 4 | *lo & 0xF;
 }
@@ -293,15 +359,21 @@ bool json::Parser::Skip(const char c)
 {
     const auto skip = m_Buffer == c;
     if (skip)
+    {
         Get();
+    }
     return skip;
 }
 
 bool json::Parser::Skip(const std::string_view s)
 {
     for (const auto c : s)
+    {
         if (!Skip(c))
+        {
             return false;
+        }
+    }
     return true;
 }
 
@@ -313,10 +385,14 @@ static bool is_whitespace(const int c)
 bool json::Parser::SkipWhitespace()
 {
     if (!is_whitespace(m_Buffer))
+    {
         return false;
+    }
 
     do
+    {
         Get();
+    }
     while (is_whitespace(m_Buffer));
 
     return true;

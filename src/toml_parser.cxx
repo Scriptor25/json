@@ -19,13 +19,19 @@ toml::Exp<toml::Node> toml::Parser::Parse()
     while (m_Buffer >= 0)
     {
         if (SkipWhitespace())
+        {
             continue;
+        }
 
         if (SkipComment())
+        {
             continue;
+        }
 
         if (SkipEoL())
+        {
             continue;
+        }
 
         if (Skip('['))
         {
@@ -35,21 +41,29 @@ toml::Exp<toml::Node> toml::Parser::Parse()
 
             auto key_exp = ParseKey();
             if (!key_exp)
+            {
                 return Error("{}", key_exp.error());
+            }
 
             auto key = *std::move(key_exp);
 
             SkipWhitespace();
 
             if (!Skip(']'))
+            {
                 return Error("expected closing bracket");
+            }
 
             if (is_array && !Skip(']'))
+            {
                 return Error("expected closing bracket");
+            }
 
             auto table_exp = MakeNodeKey(node, key);
             if (!table_exp)
+            {
                 return Error("{}", table_exp.error());
+            }
 
             table = *std::move(table_exp);
 
@@ -57,12 +71,16 @@ toml::Exp<toml::Node> toml::Parser::Parse()
             SkipComment();
 
             if (!SkipEoL())
+            {
                 return Error("expected end of line");
+            }
 
             if (is_array)
             {
                 if (!*table)
+                {
                     *table = Node::Vec();
+                }
 
                 if (table->Is<Node::Vec>())
                 {
@@ -70,7 +88,9 @@ toml::Exp<toml::Node> toml::Parser::Parse()
                     table = &vec.emplace_back();
                 }
                 else
+                {
                     return Error("expected vector");
+                }
             }
 
             continue;
@@ -78,20 +98,26 @@ toml::Exp<toml::Node> toml::Parser::Parse()
 
         auto key_exp = ParseKey();
         if (!key_exp)
+        {
             return Error("{}", key_exp.error());
+        }
 
         auto key = *std::move(key_exp);
 
         SkipWhitespace();
 
         if (!Skip('='))
+        {
             return Error("expected assignment");
+        }
 
         SkipWhitespace();
 
         auto value_exp = ParseValue();
         if (!value_exp)
+        {
             return value_exp;
+        }
 
         auto value = *std::move(value_exp);
 
@@ -99,11 +125,15 @@ toml::Exp<toml::Node> toml::Parser::Parse()
         SkipComment();
 
         if (!SkipEoL())
+        {
             return Error("expected end of line");
+        }
 
         auto entry_exp = MakeNodeKey(*table, key);
         if (!entry_exp)
+        {
             return Error("{}", entry_exp.error());
+        }
 
         auto entry = *std::move(entry_exp);
 
@@ -119,11 +149,15 @@ toml::Exp<toml::Node> toml::Parser::ParseValue()
     {
     case 'f':
         if (!Skip("false"))
+        {
             return Error("expected 'false'");
+        }
         return false;
     case 't':
         if (!Skip("true"))
+        {
             return Error("expected 'true'");
+        }
         return true;
 
     case '+':
@@ -171,18 +205,26 @@ toml::Exp<toml::Node> toml::Parser::ParseNumber()
     if (At('i'))
     {
         if (!Skip("inf"))
+        {
             return Error("expected 'inf'");
+        }
         if (has_sign && buffer.front() == '-')
+        {
             return -std::numeric_limits<FloatingPoint>::infinity();
+        }
         return std::numeric_limits<FloatingPoint>::infinity();
     }
 
     if (At('n'))
     {
         if (!Skip("nan"))
+        {
             return Error("expected 'nan'");
+        }
         if (has_sign && buffer.front() == '-')
+        {
             return -std::numeric_limits<FloatingPoint>::quiet_NaN();
+        }
         return std::numeric_limits<FloatingPoint>::quiet_NaN();
     }
 
@@ -223,7 +265,9 @@ toml::Exp<toml::Node> toml::Parser::ParseNumber()
         buffer += Pop();
 
         if (Skip('_'))
+        {
             continue;
+        }
 
         if (!is_float && base == 10 && At('.'))
         {
@@ -238,18 +282,27 @@ toml::Exp<toml::Node> toml::Parser::ParseNumber()
         buffer += Pop();
 
         if (At('+') || At('-'))
+        {
             buffer += Pop();
+        }
 
         if (!AtDigit(10))
+        {
             return Error("expected base 10 digit");
+        }
 
         do
+        {
             buffer += Pop();
+        }
         while (AtDigit(10));
     }
 
     if (is_float)
+    {
         return std::stold(buffer);
+    }
+
     return std::stoll(buffer, nullptr, base);
 }
 
@@ -258,7 +311,9 @@ toml::Exp<toml::Node> toml::Parser::ParseString()
     std::u32string value;
 
     if (!Skip('"'))
+    {
         return Error("expected quote");
+    }
 
     while (!Skip('"'))
     {
@@ -298,7 +353,9 @@ toml::Exp<toml::Node> toml::Parser::ParseString()
         {
             const auto x0 = PopByte();
             if (!x0)
+            {
                 return Error("{}", x0.error());
+            }
 
             value.push_back(*x0 & 0xff);
             break;
@@ -307,11 +364,15 @@ toml::Exp<toml::Node> toml::Parser::ParseString()
         {
             const auto x0 = PopByte();
             if (!x0)
+            {
                 return Error("{}", x0.error());
+            }
 
             const auto x1 = PopByte();
             if (!x1)
+            {
                 return Error("{}", x1.error());
+            }
 
             value.push_back((*x0 & 0xff) << 8 | *x1 & 0xff);
             break;
@@ -320,19 +381,27 @@ toml::Exp<toml::Node> toml::Parser::ParseString()
         {
             const auto x0 = PopByte();
             if (!x0)
+            {
                 return Error("{}", x0.error());
+            }
 
             const auto x1 = PopByte();
             if (!x1)
+            {
                 return Error("{}", x1.error());
+            }
 
             const auto x2 = PopByte();
             if (!x2)
+            {
                 return Error("{}", x2.error());
+            }
 
             const auto x3 = PopByte();
             if (!x3)
+            {
                 return Error("{}", x3.error());
+            }
 
             value.push_back((*x0 & 0xff) << 24 | (*x1 & 0xff) << 16 | (*x2 & 0xff) << 8 | *x3 & 0xff);
             break;
@@ -350,16 +419,22 @@ toml::Exp<toml::Node> toml::Parser::ParseArray()
     Node::Vec nodes;
 
     if (!Skip('['))
+    {
         return Error("expected opening bracket");
+    }
 
     while (!At(']'))
     {
         if (SkipWhitespace() || SkipEoL())
+        {
             continue;
+        }
 
         auto value_exp = ParseValue();
         if (!value_exp)
+        {
             return value_exp;
+        }
 
         auto value = *std::move(value_exp);
 
@@ -368,11 +443,15 @@ toml::Exp<toml::Node> toml::Parser::ParseArray()
         SkipWhitespace() || SkipEoL();
 
         if (!At(']') && !Skip(','))
+        {
             return Error("expected separator");
+        }
     }
 
     if (!Skip(']'))
+    {
         return Error("expected closing bracket");
+    }
 
     return nodes;
 }
@@ -382,35 +461,47 @@ toml::Exp<toml::Node> toml::Parser::ParseTable()
     Node::Map nodes;
 
     if (!Skip('{'))
+    {
         return Error("expected opening brace");
+    }
 
     while (!At('}'))
     {
         if (SkipWhitespace() || SkipEoL())
+        {
             continue;
+        }
 
         auto key_exp = ParseKey();
         if (!key_exp)
+        {
             return Error("{}", key_exp.error());
+        }
 
         auto key = *std::move(key_exp);
 
         SkipWhitespace();
 
         if (!Skip('='))
+        {
             return Error("expected assignment");
+        }
 
         SkipWhitespace();
 
         auto value_exp = ParseValue();
         if (!value_exp)
+        {
             return value_exp;
+        }
 
         auto value = *std::move(value_exp);
 
         auto entry_exp = MakeNodeKey(nodes, key);
         if (!entry_exp)
+        {
             return Error("{}", entry_exp.error());
+        }
 
         auto entry = *std::move(entry_exp);
 
@@ -419,11 +510,15 @@ toml::Exp<toml::Node> toml::Parser::ParseTable()
         SkipWhitespace() || SkipEoL();
 
         if (!At('}') && !Skip(','))
+        {
             return Error("expected separator");
+        }
     }
 
     if (!Skip('}'))
+    {
         return Error("expected closing brace");
+    }
 
     return nodes;
 }
@@ -438,7 +533,9 @@ toml::Exp<toml::Parser::Key> toml::Parser::ParseKey()
         {
             auto value_exp = ParseString();
             if (!value_exp)
+            {
                 return Error("{}", value_exp.error());
+            }
 
             auto value = *std::move(value_exp);
 
@@ -448,11 +545,15 @@ toml::Exp<toml::Parser::Key> toml::Parser::ParseKey()
         }
 
         if (!AtKey())
+        {
             return Error("expected key symbol");
+        }
 
         std::string buffer;
         do
+        {
             buffer += Pop();
+        }
         while (AtKey());
 
         key.push_back(std::move(buffer));
@@ -469,12 +570,18 @@ toml::Exp<toml::Node *> toml::Parser::MakeNodeKey(Node &node, const Key &key)
     for (auto &k : key)
     {
         if (!*ptr)
+        {
             *ptr = Node::Map();
+        }
 
         if (ptr->Is<Node::Map>())
+        {
             ptr = &(*ptr)[k];
+        }
         else
+        {
             return Error("expected map");
+        }
     }
     return ptr;
 }
@@ -482,7 +589,9 @@ toml::Exp<toml::Node *> toml::Parser::MakeNodeKey(Node &node, const Key &key)
 toml::Exp<toml::Node *> toml::Parser::MakeNodeKey(Node::Map &nodes, const Key &key)
 {
     if (key.size() == 1)
+    {
         return &nodes[key.front()];
+    }
     return MakeNodeKey(nodes[key.front()], { key.begin() + 1, key.end() });
 }
 
@@ -507,11 +616,17 @@ toml::Exp<unsigned char> toml::Parser::PopHalfByte()
 {
     const auto c = Pop();
     if ('0' <= c && c <= '9')
+    {
         return c - '0';
+    }
     if ('A' <= c && c <= 'F')
+    {
         return c - 'A' + 10;
+    }
     if ('a' <= c && c <= 'f')
+    {
         return c - 'a' + 10;
+    }
     return Error("expected base 16 digit");
 }
 
@@ -519,11 +634,15 @@ toml::Exp<unsigned char> toml::Parser::PopByte()
 {
     const auto hi = PopHalfByte();
     if (!hi)
+    {
         return hi;
+    }
 
     const auto lo = PopHalfByte();
     if (!lo)
+    {
         return lo;
+    }
 
     return (*hi & 0xF) << 4 | *lo & 0xF;
 }
@@ -569,25 +688,35 @@ bool toml::Parser::Skip(const char c)
 {
     const auto skip = m_Buffer == c;
     if (skip)
+    {
         Get();
+    }
     return skip;
 }
 
 bool toml::Parser::Skip(const std::string_view s)
 {
     for (const auto c : s)
+    {
         if (!Skip(c))
+        {
             return false;
+        }
+    }
     return true;
 }
 
 bool toml::Parser::SkipWhitespace()
 {
     if (m_Buffer != ' ' && m_Buffer != '\t')
+    {
         return false;
+    }
 
     do
+    {
         Get();
+    }
     while (m_Buffer == ' ' || m_Buffer == '\t');
 
     return true;
@@ -596,10 +725,14 @@ bool toml::Parser::SkipWhitespace()
 bool toml::Parser::SkipComment()
 {
     if (m_Buffer != '#')
+    {
         return false;
+    }
 
     do
+    {
         Pop();
+    }
     while (m_Buffer != '\n' && m_Buffer != '\r');
 
     return true;
@@ -608,10 +741,14 @@ bool toml::Parser::SkipComment()
 bool toml::Parser::SkipEoL()
 {
     if (m_Buffer != '\n' && m_Buffer != '\r' && m_Buffer >= 0)
+    {
         return false;
+    }
 
     do
+    {
         Get();
+    }
     while (m_Buffer == '\n' || m_Buffer == '\r');
 
     return true;

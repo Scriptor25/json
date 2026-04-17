@@ -1,5 +1,4 @@
 #include <data/utf8.hxx>
-#include <json/json.hxx>
 #include <json/parser.hxx>
 
 #include <iomanip>
@@ -24,7 +23,7 @@ static std::ostream &print_fn(std::ostream &stream, const unsigned indent, const
 {
     struct
     {
-        void operator()(json::Node::Undefined) const
+        void operator()(json::Undefined) const
         {
             stream << "<undefined>";
         }
@@ -54,6 +53,7 @@ static std::ostream &print_fn(std::ostream &stream, const unsigned indent, const
             stream << '"';
 
             for (const auto c : data::utf8::decode(value))
+            {
                 switch (c)
                 {
                 case '"':
@@ -79,11 +79,16 @@ static std::ostream &print_fn(std::ostream &stream, const unsigned indent, const
                     break;
                 default:
                     if (0x20 <= c && c < 0x7F)
+                    {
                         stream << static_cast<char>(c);
+                    }
                     else
+                    {
                         stream << "\\u" << std::setw(4) << std::setfill('0') << std::hex << static_cast<int>(c);
+                    }
                     break;
                 }
+            }
 
             stream << '"';
         }
@@ -95,45 +100,70 @@ static std::ostream &print_fn(std::ostream &stream, const unsigned indent, const
                 auto &depth = get_context_depth(stream);
 
                 stream << '[';
+
                 if (value.size() > 1)
                 {
                     stream << '\n';
                     depth++;
                 }
+
                 auto first = true;
                 for (auto &it : value)
                 {
                     if (!it)
+                    {
                         continue;
+                    }
+
                     if (first)
+                    {
                         first = false;
+                    }
                     else
+                    {
                         stream << ',' << '\n';
+                    }
+
                     if (value.size() > 1)
+                    {
                         indent_depth(stream, indent);
+                    }
+
                     print_fn(stream, indent, it.Value);
                 }
+
                 if (value.size() > 1)
                 {
                     depth--;
                     indent_depth(stream << '\n', indent);
                 }
+
                 stream << ']';
             }
             else
             {
                 stream << '[';
+
                 auto first = true;
                 for (auto &it : value)
                 {
                     if (!it)
+                    {
                         continue;
+                    }
+
                     if (first)
+                    {
                         first = false;
+                    }
                     else
+                    {
                         stream << ',';
+                    }
+
                     print_fn(stream, indent, it.Value);
                 }
+
                 stream << ']';
             }
         }
@@ -145,41 +175,69 @@ static std::ostream &print_fn(std::ostream &stream, const unsigned indent, const
                 auto &depth = get_context_depth(stream);
 
                 stream << '{';
+
                 if (!value.empty())
-                    stream << '\n';
-                depth++;
-                auto first = true;
-                for (auto &it : value)
                 {
-                    if (!it.second)
-                        continue;
-                    if (first)
-                        first = false;
-                    else
-                        stream << ',' << '\n';
-                    print_fn(indent_depth(stream, indent), indent, it.first) << ": ";
-                    print_fn(stream, indent, it.second.Value);
+                    stream << '\n';
                 }
+
+                depth++;
+
+                auto first = true;
+                for (const auto &[key_, val_] : value)
+                {
+                    if (!val_)
+                    {
+                        continue;
+                    }
+
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        stream << ',' << '\n';
+                    }
+
+                    print_fn(indent_depth(stream, indent), indent, key_) << ": ";
+                    print_fn(stream, indent, val_.Value);
+                }
+
                 depth--;
+
                 if (!value.empty())
+                {
                     indent_depth(stream << '\n', indent);
+                }
+
                 stream << '}';
             }
             else
             {
                 stream << '{';
+
                 auto first = true;
-                for (auto &it : value)
+                for (const auto &[key_, val_] : value)
                 {
-                    if (!it.second)
+                    if (!val_)
+                    {
                         continue;
+                    }
+
                     if (first)
+                    {
                         first = false;
+                    }
                     else
+                    {
                         stream << ',';
-                    print_fn(stream, indent, it.first) << ':';
-                    print_fn(stream, indent, it.second.Value);
+                    }
+
+                    print_fn(stream, indent, key_) << ':';
+                    print_fn(stream, indent, val_.Value);
                 }
+
                 stream << '}';
             }
         }
@@ -216,8 +274,12 @@ std::istream &data::NodeTraits<
 {
     json::Parser parser(stream);
     if (auto exp = parser.Parse())
+    {
         node = *exp;
+    }
     else
+    {
         std::cerr << exp.error() << std::endl;
+    }
     return stream;
 }
