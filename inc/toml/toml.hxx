@@ -9,8 +9,8 @@
 namespace toml
 {
     using Boolean = bool;
-    using Integer = long long;
-    using FloatingPoint = long double;
+    using Integer = data::Integer;
+    using FloatingPoint = data::FloatingPoint;
     using String = std::string;
 
     struct LocalDate
@@ -52,6 +52,9 @@ namespace toml
         LocalTime,
         DateTime
     >;
+
+    using Array = Node::Vec;
+    using Table = Node::Map;
 }
 
 template<>
@@ -65,8 +68,5 @@ struct data::NodeTraits<
             toml::DateTime
         >
 {
-    using Integer = toml::Integer;
-    using FloatingPoint = toml::FloatingPoint;
-
     static std::istream &parse(std::istream &stream, toml::Node &node);
 };

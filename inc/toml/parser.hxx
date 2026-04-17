@@ -18,7 +18,7 @@ namespace toml
 
     class Parser final
     {
-        using Key = std::vector<Node::Key>;
+        using Key = std::vector<data::Key>;
 
     public:
         explicit Parser(std::istream &stream);
