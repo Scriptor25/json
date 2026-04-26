@@ -5,6 +5,8 @@
 #include <optional>
 #include <set>
 #include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -53,6 +55,19 @@ namespace toolkit
     concept set_type = is_set<std::decay_t<T>>::value;
 
     template<typename>
+    struct is_unordered_set : std::false_type
+    {
+    };
+
+    template<typename... Args>
+    struct is_unordered_set<std::unordered_set<Args...>> : std::true_type
+    {
+    };
+
+    template<typename T>
+    concept unordered_set_type = is_unordered_set<std::decay_t<T>>::value;
+
+    template<typename>
     struct is_array : std::false_type
     {
     };
@@ -77,6 +92,19 @@ namespace toolkit
 
     template<typename T>
     concept map_type = is_map<std::decay_t<T>>::value;
+
+    template<typename>
+    struct is_unordered_map : std::false_type
+    {
+    };
+
+    template<typename... Args>
+    struct is_unordered_map<std::unordered_map<Args...>> : std::true_type
+    {
+    };
+
+    template<typename T>
+    concept unordered_map_type = is_unordered_map<std::decay_t<T>>::value;
 
     template<typename>
     struct is_optional : std::false_type

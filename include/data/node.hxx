@@ -522,6 +522,24 @@ void to_data(N &node, T &&value)
 }
 
 template<data::node N, typename T>
+bool from_data(const N &node, std::unordered_set<T> &value)
+{
+    if (std::vector<T> val; node >> val)
+    {
+        value = { std::make_move_iterator(val.begin()), std::make_move_iterator(val.end()) };
+        return true;
+    }
+
+    return false;
+}
+
+template<data::node N, toolkit::unordered_set_type T>
+void to_data(N &node, T &&value)
+{
+    node = std::vector(value.begin(), value.end());
+}
+
+template<data::node N, typename T>
 bool from_data(const N &node, std::map<data::Key, T> &value)
 {
     using Map = N::Map;
@@ -537,6 +555,32 @@ bool from_data(const N &node, std::map<data::Key, T> &value)
 }
 
 template<data::node N, toolkit::map_type T>
+void to_data(N &node, T &&value)
+{
+    using Map = N::Map;
+
+    node = Map();
+
+    for (auto &&[key, val] : value)
+        node[key] = val;
+}
+
+template<data::node N, typename T>
+bool from_data(const N &node, std::unordered_map<data::Key, T> &value)
+{
+    using Map = N::Map;
+
+    if (!node.template Is<Map>())
+        return false;
+
+    auto ok = true;
+    for (auto &&[key, val] : node)
+        ok &= val >> value[key];
+
+    return ok;
+}
+
+template<data::node N, toolkit::unordered_map_type T>
 void to_data(N &node, T &&value)
 {
     using Map = N::Map;
