@@ -10,7 +10,7 @@
 
 namespace toolkit
 {
-    template<typename, typename>
+    template<typename = void, typename = std::string>
     class result;
 
     template<typename>
@@ -29,15 +29,167 @@ namespace toolkit
     template<typename E>
     struct result_error
     {
-        E value;
+        E message;
     };
 
-    template<typename T, typename E = std::string>
+    template<typename E>
+    class result<void, E>
+    {
+    public:
+        using error_value_type = std::decay_t<E>;
+        using error_type = result_error<error_value_type>;
+
+        result()
+            : container(std::nullopt)
+        {
+        }
+
+        result(const error_type &error)
+            : container(error)
+        {
+        }
+
+        result(error_type &&error)
+            : container(std::move(error))
+        {
+        }
+
+        result(const result &other)
+            : container(other.container)
+        {
+        }
+
+        result(result &&other) noexcept
+            : container(std::move(other.container))
+        {
+        }
+
+        result &operator=(const error_type &error)
+        {
+            container = error;
+            return *this;
+        }
+
+        result &operator=(error_type &&error)
+        {
+            container = std::move(error);
+            return *this;
+        }
+
+        result &operator=(const result &other)
+        {
+            container = other.container;
+            return *this;
+        }
+
+        result &operator=(result &&other) noexcept
+        {
+            std::swap(container, other.container);
+            return *this;
+        }
+
+        explicit operator bool() const
+        {
+            return !container.has_value();
+        }
+
+        bool operator!() const
+        {
+            return container.has_value();
+        }
+
+        bool operator<=>(const result &other) const
+        {
+            return container <=> other.container;
+        }
+
+        auto &&error() &
+        {
+            return container.value().message;
+        }
+
+        auto &&error() const &
+        {
+            return container.value().message;
+        }
+
+        auto &&error() &&
+        {
+            return std::move(container).value().message;
+        }
+
+        template<typename F>
+        auto and_then(F &&f) &
+        {
+            return and_then_impl(*this, std::forward<F>(f));
+        }
+
+        template<typename F>
+        auto and_then(F &&f) const &
+        {
+            return and_then_impl(*this, std::forward<F>(f));
+        }
+
+        template<typename F>
+        auto and_then(F &&f) &&
+        {
+            return and_then_impl(std::move(*this), std::forward<F>(f));
+        }
+
+        template<typename F>
+        auto or_else(F &&f) &
+        {
+            return or_else_impl(*this, std::forward<F>(f));
+        }
+
+        template<typename F>
+        auto or_else(F &&f) const &
+        {
+            return or_else_impl(*this, std::forward<F>(f));
+        }
+
+        template<typename F>
+        auto or_else(F &&f) &&
+        {
+            return or_else_impl(std::move(*this), std::forward<F>(f));
+        }
+
+    private:
+        template<typename S, typename F>
+        static auto and_then_impl(S &&s, F &&f)
+        {
+            using R = std::invoke_result_t<F &&>;
+            static_assert(result_type<R>);
+
+            if (!s.container.has_value())
+                return std::forward<F>(f)();
+
+            return R(std::forward<S>(s).container.value());
+        }
+
+        template<typename S, typename F>
+        static auto or_else_impl(S &&s, F &&f)
+        {
+            using A = copy_cvref_t<S, error_value_type>;
+            using R = std::invoke_result_t<F &&, A>;
+            static_assert(result_type<R>);
+
+            if (s.container.has_value())
+                return std::forward<F>(f)(std::forward<A>(s.container.value().message));
+
+            return R();
+        }
+
+        std::optional<error_type> container;
+    };
+
+    template<typename T, typename E>
     class result
     {
     public:
         using value_type = std::decay_t<T>;
-        using error_type = result_error<std::decay_t<E>>;
+        using error_value_type = std::decay_t<E>;
+        using error_type = result_error<error_value_type>;
 
         result()
             : container(value_type{})
@@ -129,35 +281,35 @@ namespace toolkit
         {
             if (const auto ptr = std::get_if<value_type>(&container))
                 return *ptr;
-            throw std::runtime_error(std::get<error_type>(container).value);
+            throw std::runtime_error(std::get<error_type>(container).message);
         }
 
         auto &&operator*() const &
         {
             if (const auto ptr = std::get_if<value_type>(&container))
                 return *ptr;
-            throw std::runtime_error(std::get<error_type>(container).value);
+            throw std::runtime_error(std::get<error_type>(container).message);
         }
 
         auto &&operator*() &&
         {
             if (const auto ptr = std::get_if<value_type>(&container))
                 return std::move(*ptr);
-            throw std::runtime_error(std::get<error_type>(container).value);
+            throw std::runtime_error(std::get<error_type>(container).message);
         }
 
         auto *operator->()
         {
             if (const auto ptr = std::get_if<value_type>(&container))
                 return ptr;
-            throw std::runtime_error(std::get<error_type>(container).value);
+            throw std::runtime_error(std::get<error_type>(container).message);
         }
 
         auto *operator->() const
         {
             if (const auto ptr = std::get_if<value_type>(&container))
                 return ptr;
-            throw std::runtime_error(std::get<error_type>(container).value);
+            throw std::runtime_error(std::get<error_type>(container).message);
         }
 
         auto &&value() &
@@ -177,17 +329,17 @@ namespace toolkit
 
         auto &&error() &
         {
-            return std::get<error_type>(container).value;
+            return std::get<error_type>(container).message;
         }
 
         auto &&error() const &
         {
-            return std::get<error_type>(container).value;
+            return std::get<error_type>(container).message;
         }
 
         auto &&error() &&
         {
-            return std::get<error_type>(std::move(container)).value;
+            return std::get<error_type>(std::move(container)).message;
         }
 
         template<typename F>
@@ -234,23 +386,23 @@ namespace toolkit
             using R = std::invoke_result_t<F &&, A>;
             static_assert(result_type<R>);
 
-            if (auto *ptr = std::get_if<value_type>(&s.value))
+            if (auto *ptr = std::get_if<value_type>(&s.container))
                 return std::forward<F>(f)(std::forward<A>(*ptr));
 
-            return R(std::forward<S>(std::get<error_type>(s.value)));
+            return R(std::get<error_type>(std::forward<S>(s).container));
         }
 
         template<typename S, typename F>
         static auto or_else_impl(S &&s, F &&f)
         {
-            using A = copy_cvref_t<S, error_type>;
+            using A = copy_cvref_t<S, error_value_type>;
             using R = std::invoke_result_t<F &&, A>;
             static_assert(result_type<R>);
 
-            if (auto *ptr = std::get_if<error_type>(&s.value))
-                return std::forward<F>(f)(std::forward<A>(*ptr));
+            if (auto *ptr = std::get_if<error_type>(&s.container))
+                return std::forward<F>(f)(std::forward<A>(ptr->message));
 
-            return R(std::forward<S>(std::get<value_type>(s.value)));
+            return R(std::get<value_type>(std::forward<S>(s).container));
         }
 
         std::variant<value_type, error_type> container;
@@ -260,5 +412,28 @@ namespace toolkit
     auto make_error(std::format_string<A...> fmt, A &&... args)
     {
         return result_error{ std::format(std::move(fmt), std::forward<A>(args)...) };
+    }
+
+    template<result_type R>
+    auto operator>>(R &&r, typename R::value_type &v)
+    {
+        return std::forward<R>(r).and_then(
+            [&v]<typename T>(T &&value) -> result<>
+            {
+                v = std::forward<T>(value);
+                return {};
+            });
+    }
+
+    template<result_type R, typename F>
+    auto operator&(R &&r, F &&f)
+    {
+        return std::forward<R>(r).and_then(std::forward<F>(f));
+    }
+
+    template<result_type R, typename F>
+    auto operator|(R &&r, F &&f)
+    {
+        return std::forward<R>(r).or_else(std::forward<F>(f));
     }
 }
